@@ -17,7 +17,7 @@ export default function Footer() {
               aria-label="MNU Home"
             >
               <Image
-                src="https://mnu.edu.mv/wp-content/uploads/2021/12/MNU-Logo-Horizontal-Filled-01-e1638420030168.png"
+                src="/images/mnu-logo.png"
                 alt="Maldives National University Logo"
                 width={200}
                 height={64}
