@@ -16,11 +16,10 @@ export default function Footer() {
               rel="noopener noreferrer"
               aria-label="MNU Home"
             >
-              <Image
+              <img
                 src="/images/mnu-logo.png"
                 alt="Maldives National University Logo"
-                width={200}
-                height={64}
+                style={{ width: "200px", height: "auto" }}
                 className="mx-auto mb-2"
               />
             </Link>

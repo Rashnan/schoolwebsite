@@ -18,7 +18,7 @@ export default function Home() {
       <section
         className="relative w-full min-h-[400px] flex items-center justify-center"
         style={{
-          backgroundImage: "url('images/hero-bg.jpg')",
+          backgroundImage: "url('/images/hero-bg.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -36,11 +36,10 @@ export default function Home() {
       {/* race route section */}
       <section className="flex flex-col md:flex-row items-center justify-center gap-8 py-12">
         <div className="w-full md:w-1/2 flex md:justify-end justify-center">
-          <Image
+          <img
             src="/images/run-route.jpg"
             alt="Race event"
-            width={500}
-            height={500}
+            style={{ width: "500px", height: "auto" }}
             className="rounded-lg shadow-lg object-cover"
           />
         </div>
