@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,9 +11,13 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import Footer from "@/components/footer";
-// Import the new Footer component
+import { useCart } from "@/contexts/CartContext";
 
 export default function Home() {
+  const { getCartCount, getCartTotal } = useCart();
+  const cartCount = getCartCount();
+  const cartTotal = getCartTotal();
+
   return (
     <>
       {/* hero section */}
@@ -133,12 +139,39 @@ export default function Home() {
         <p className="mb-6 text-lg">
           Register now and be a part of an unforgettable event!
         </p>
-        <Link
-          href="/register"
-          className="inline-block bg-white font-semibold px-8 py-3 rounded-full shadow transition hover:bg-gray-100 text-blue-900"
-        >
-          Register Now
-        </Link>
+        
+        {cartCount > 0 ? (
+          <div className="mb-6">
+            <div className="bg-white/10 rounded-lg p-4 mb-4">
+              <p className="text-lg mb-2">
+                You have {cartCount} {cartCount === 1 ? 'registration' : 'registrations'} in your cart
+              </p>
+              <p className="text-xl font-bold">Total: MVR {cartTotal}</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/register"
+                className="inline-block bg-white font-semibold px-8 py-3 rounded-full shadow transition hover:bg-gray-100 text-blue-900"
+              >
+                Continue Shopping
+              </Link>
+              <Link
+                href="/payments"
+                className="inline-block bg-green-600 hover:bg-green-700 font-semibold px-8 py-3 rounded-full shadow transition text-white"
+              >
+                Proceed to Checkout
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <Link
+            href="/register"
+            className="inline-block bg-white font-semibold px-8 py-3 rounded-full shadow transition hover:bg-gray-100 text-blue-900"
+          >
+            Register Now
+          </Link>
+        )}
+        
         <p className="mt-6 text-sm text-blue-200">
           <span className="italic">
             Note: Item collection point is at <strong>MNU Central Administration</strong>.

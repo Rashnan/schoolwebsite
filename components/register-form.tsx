@@ -27,7 +27,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import { toast } from "sonner";
 import { User } from "lucide-react";
-import { useParticipant } from "@/contexts/ParticipantContext";
 
 // Helper function for email validation
 const isValidEmail = (email: string) =>
@@ -47,11 +46,11 @@ interface RegistrationData {
 
 interface RegistrationFormProps {
     onSubmit?: (data: RegistrationData) => void;
+    initialData?: any;
 }
 
-export default function RegistrationPageContent({ onSubmit }: RegistrationFormProps) {
+export default function RegistrationPageContent({ onSubmit, initialData }: RegistrationFormProps) {
     const router = useRouter();
-    const { currentParticipant, updateCurrentParticipant } = useParticipant();
     const [formErrors, setFormErrors] = useState<
         Record<string, string | undefined>
     >({});
@@ -68,9 +67,6 @@ export default function RegistrationPageContent({ onSubmit }: RegistrationFormPr
         }
     });
     
-    // Force re-render when currentParticipant changes
-    const formKey = currentParticipant?.id || 'new';
-
     // Race category prices
     const racePrices: Record<string, number> = {
         "5k-race": 300,
@@ -81,23 +77,23 @@ export default function RegistrationPageContent({ onSubmit }: RegistrationFormPr
 
     const tshirtPrice = 50;
 
-    // Populate form with current participant data
+    // Populate form with initial data for editing
     useEffect(() => {
-        if (currentParticipant) {
+        if (initialData) {
             setFormState({
-                category: currentParticipant.category,
-                includeTshirt: currentParticipant.includeTshirt,
+                category: initialData.category,
+                includeTshirt: initialData.includeTshirt,
                 participant: {  
-                    fullName: currentParticipant.participant.fullName,
-                    email: currentParticipant.participant.email,
-                    phoneNumber: currentParticipant.participant.phoneNumber,
-                    tshirtSize: currentParticipant.participant.tshirtSize === "N/A" ? "" : currentParticipant.participant.tshirtSize,
+                    fullName: initialData.participant.fullName,
+                    email: initialData.participant.email,
+                    phoneNumber: initialData.participant.phoneNumber,
+                    tshirtSize: initialData.participant.tshirtSize === "N/A" ? "" : initialData.participant.tshirtSize,
                 }
             });
-            setSelectedCategory(currentParticipant.category);
-            setIncludeTshirt(currentParticipant.includeTshirt);
+            setSelectedCategory(initialData.category);
+            setIncludeTshirt(initialData.includeTshirt);
         } else {
-            // Reset form when no current participant
+            // Reset form when no initial data
             setFormState({
                 category: "",
                 includeTshirt: true,
@@ -111,7 +107,7 @@ export default function RegistrationPageContent({ onSubmit }: RegistrationFormPr
             setSelectedCategory("");
             setIncludeTshirt(true);
         }
-    }, [currentParticipant]);
+    }, [initialData]);
 
     // Calculate total price
     const calculateTotalPrice = (): number => {
@@ -252,10 +248,7 @@ export default function RegistrationPageContent({ onSubmit }: RegistrationFormPr
                 totalPrice: calculateTotalPrice(),
             };
 
-            // Update current participant in context
-            updateCurrentParticipant(registrationData);
-
-            // Call onSubmit function if provided, otherwise use default behavior
+            // Call onSubmit function if provided
             if (onSubmit) {
                 onSubmit(registrationData);
             } else {
@@ -265,10 +258,6 @@ export default function RegistrationPageContent({ onSubmit }: RegistrationFormPr
                     JSON.stringify(registrationData)
                 );
             }
-            
-            toast.success("Registration Submitted", {
-                description: "Your registration has been submitted successfully.",
-            });
         } else {
             toast.error("Validation Failed", {
                 description: "Please correct the errors in the form.",
@@ -280,7 +269,7 @@ export default function RegistrationPageContent({ onSubmit }: RegistrationFormPr
         <Card>
             <CardHeader>
                 <CardTitle className="text-3xl font-bold text-center">
-                    {currentParticipant ? "Edit Participant" : "Participant Registration"}
+                    {initialData ? "Edit Registration" : "Participant Registration"}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -514,7 +503,7 @@ export default function RegistrationPageContent({ onSubmit }: RegistrationFormPr
                             Clear Form
                         </Button>
                         <Button type="submit">
-                            {currentParticipant ? "Update Registration" : "Register"}
+                            {initialData ? "Update Registration" : "Add to Cart"}
                         </Button>
                     </div>
                 </form>

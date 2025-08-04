@@ -23,6 +23,7 @@ import {
   FileImage,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
 
 // Race categories with pricing
 const raceCategories = {
@@ -49,6 +50,7 @@ interface RegistrationData {
 
 export default function PaymentPage() {
   const router = useRouter();
+  const { cartItems, clearCart } = useCart();
   const [isPending, startTransition] = useTransition();
   const [participants, setParticipants] = useState<RegistrationData[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -61,30 +63,39 @@ export default function PaymentPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
 
   useEffect(() => {
-    // Get participants data from localStorage
-    const storedParticipants = localStorage.getItem('checkoutParticipants');
-    if (storedParticipants) {
-      const parsedParticipants = JSON.parse(storedParticipants);
-      setParticipants(parsedParticipants);
-      
-      // Calculate total amount
-      const total = parsedParticipants.reduce((sum: number, participant: RegistrationData) => {
+    // Use cart items if available, otherwise fall back to localStorage
+    if (cartItems.length > 0) {
+      setParticipants(cartItems);
+      const total = cartItems.reduce((sum: number, participant: RegistrationData) => {
         return sum + participant.totalPrice;
       }, 0);
       setTotalAmount(total);
     } else {
-      // No participants data, redirect back to register page
-      toast.error("No Registration Data Found", {
-        description: "Please complete your registration first before proceeding to payment.",
-        style: {
-          background: '#fef2f2',
-          color: '#991b1b',
-          border: '1px solid #fecaca',
-        },
-      });
-      router.push('/register');
+      // Get participants data from localStorage (fallback)
+      const storedParticipants = localStorage.getItem('checkoutParticipants');
+      if (storedParticipants) {
+        const parsedParticipants = JSON.parse(storedParticipants);
+        setParticipants(parsedParticipants);
+
+        // Calculate total amount
+        const total = parsedParticipants.reduce((sum: number, participant: RegistrationData) => {
+          return sum + participant.totalPrice;
+        }, 0);
+        setTotalAmount(total);
+      } else {
+        // No participants data, redirect back to register page
+        toast.error("No Registration Data Found", {
+          description: "Please complete your registration first before proceeding to payment.",
+          style: {
+            background: '#fef2f2',
+            color: '#991b1b',
+            border: '1px solid #fecaca',
+          },
+        });
+        router.push('/register');
+      }
     }
-  }, [router]);
+  }, [router, cartItems]);
 
   const getCategoryDisplayName = (category: string) => {
     const categoryMap: Record<string, string> = {
@@ -119,7 +130,7 @@ export default function PaymentPage() {
     if (file) {
       // Validate file type
       if (file.type === "image/png" || file.type === "image/jpeg") {
-        const base64Res = encodeToBase64(file).then( b64 => {setSelectedFileAsBase64(b64 as string)}); //Store the payment slip as base64 text.
+        const base64Res = encodeToBase64(file).then(b64 => { setSelectedFileAsBase64(b64 as string) }); //Store the payment slip as base64 text.
         setSelectedFile(file);
         toast.success("File Selected Successfully", {
           description: `${file.name} has been selected and is ready for upload.`,
@@ -143,21 +154,21 @@ export default function PaymentPage() {
 
     startTransition(async () => {
       // Simulate payment processing
-    var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants'));//cart used as payment summary
-	var cardData = new FormData(event.target) //used for testing API only, changes to be made later
-	cardData = Object.fromEntries(cardData.entries());
-	const jsonBody = {
-		cardHolder: `${cardData.cardName}`,
-		amount: Number(totalAmount),
-	}
-	customerSummary.push(jsonBody);//Add card related data to request body
-	const response = await fetch("/api/paymentgateway",{
-		method: "POST",
-		headers: { "Content-Type": "application/json"},
-		body: JSON.stringify(customerSummary),
-	})
-	const res_json = await response.json()
-	console.log("ServerResponse: " + res_json.message) //Print server response, [Testing Only]
+      var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants') || JSON.stringify(cartItems));//cart used as payment summary
+      const formData = new FormData(event.currentTarget);
+      const cardData = Object.fromEntries(formData.entries()) as Record<string, string>;
+      const jsonBody = {
+        cardHolder: cardData.cardName || '',
+        amount: Number(totalAmount),
+      }
+      customerSummary.push(jsonBody);//Add card related data to request body
+      const response = await fetch("/api/paymentgateway", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customerSummary),
+      })
+      const res_json = await response.json()
+      console.log("ServerResponse: " + res_json.message) //Print server response, [Testing Only]
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       setSubmissionMessage({
@@ -169,9 +180,10 @@ export default function PaymentPage() {
         description: "Your registration has been confirmed. You will receive a confirmation email shortly.",
       });
 
-      // Clear participants data from localStorage
+      // Clear cart and participants data
+      clearCart();
       localStorage.removeItem("checkoutParticipants");
-      
+
       // Redirect to home page after successful payment
       setTimeout(() => {
         router.push('/');
@@ -198,9 +210,9 @@ export default function PaymentPage() {
 
     startTransition(async () => {
       //Send customer data to backend
-      var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants'));//cart used as payment summary
-      customerSummary.push({slipBlobBase64: `${selectedFileAsBase64}`});//Stores the payment slip image as bas64 text in the JSON request data
-      const response = await fetch("/api/paymentslip",{
+      var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants') || JSON.stringify(cartItems));//cart used as payment summary
+      customerSummary.push({ slipBlobBase64: selectedFileAsBase64 || '' });//Stores the payment slip image as bas64 text in the JSON request data
+      const response = await fetch("/api/paymentslip", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(customerSummary),
@@ -220,9 +232,10 @@ export default function PaymentPage() {
           "We will verify your payment and confirm your registration within 24 hours.",
       });
 
-      // Clear participants data from localStorage
+      // Clear cart and participants data
+      clearCart();
       localStorage.removeItem("checkoutParticipants");
-      
+
       // Redirect to home page after successful payment
       setTimeout(() => {
         router.push('/');
@@ -595,11 +608,10 @@ export default function PaymentPage() {
 
             {submissionMessage && (
               <div
-                className={`mt-4 p-3 rounded-md text-center ${
-                  submissionMessage.success
+                className={`mt-4 p-3 rounded-md text-center ${submissionMessage.success
                     ? "bg-green-100 text-green-700"
                     : "bg-red-100 text-red-700"
-                }`}
+                  }`}
               >
                 {submissionMessage.message}
               </div>

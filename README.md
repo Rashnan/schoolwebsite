@@ -2,8 +2,20 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, clone the repo:
+```bash
+git clone https://github.com/Jaid199/schoolwebsite
+# or
+git clone git@github.com:Jaid199/schoolwebsite.git
+```
 
+Then, go into the folder and install all dependencies
+```bash
+cd schoolwebsite
+npm install
+```
+
+Finally, start the development server
 ```bash
 npm run dev
 # or
