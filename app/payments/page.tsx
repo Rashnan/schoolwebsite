@@ -143,16 +143,18 @@ export default function PaymentPage() {
 
     startTransition(async () => {
       // Simulate payment processing
+    var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants'));//cart used as payment summary
 	var cardData = new FormData(event.target) //used for testing API only, changes to be made later
 	cardData = Object.fromEntries(cardData.entries());
 	const jsonBody = {
 		cardHolder: `${cardData.cardName}`,
 		amount: Number(totalAmount),
 	}
+	customerSummary.push(jsonBody);//Add card related data to request body
 	const response = await fetch("/api/paymentgateway",{
 		method: "POST",
 		headers: { "Content-Type": "application/json"},
-		body: JSON.stringify(jsonBody),
+		body: JSON.stringify(customerSummary),
 	})
 	const res_json = await response.json()
 	console.log("ServerResponse: " + res_json.message) //Print server response, [Testing Only]

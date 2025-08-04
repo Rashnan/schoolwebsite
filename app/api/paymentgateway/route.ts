@@ -17,13 +17,15 @@ export async function POST(req: Request){
 
 		//Received Data
 		const recData = await req.json();
+		const cardData = await recData[recData.length - 1];//Get card related data from the client request
 
 		//simulation of payment processing. [TO BE SWITCHED TO PAYMENT GATEWAY IMPLEMENTATION]
-		if (!recData.amount || !recData.cardHolder) {
+		if (!cardData.amount || !cardData.cardHolder) {
 			return response400();
 		}
 		
-		return NextResponse.json({message: `Transaction of MVR ${recData.amount} by ${recData.cardHolder} has been processed`}, {status: 200});
+		console.log(recData);//[DEBUG] for testing only. Prints customer details to the console
+		return NextResponse.json({message: `Transaction of MVR ${cardData.amount} by ${cardData.cardHolder} has been processed`}, {status: 200});
 
 	} catch (error) {
 		return response400();
