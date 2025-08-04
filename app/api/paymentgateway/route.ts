@@ -1,27 +1,7 @@
 //Backend code used to process payment gateway requests(like BML for now)
 
 import { NextResponse } from 'next/server';
-
-//template for displaying error code 403
-const rejectHTML = `
-<html><head><title>Forbidden 403</title></head>
-<body>
-<h1>Forbidden 403</h1>
-<p>You are not allowed to make this request</p>
-</body></html>
-`
-async function response403(){
-
-        return new NextResponse(rejectHTML, {
-                status: 403,
-                headers: {'Content-Type': 'text/html'},
-        })
-}
-
-//template error for responding to corrupt or malformed requests
-async function response400(){
-	return NextResponse.json({error: 'Received broken request. Please Contact us for further support.'},{status: 400})
-}
+import { response400, response403 } from '@/components/error-template';
 
 export async function GET(req: Request){
 

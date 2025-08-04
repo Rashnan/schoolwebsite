@@ -57,6 +57,7 @@ export default function PaymentPage() {
     message: string;
   } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFileAsBase64, setSelectedFileAsBase64] = useState<string | null>(null); //for storing payment slip image as base64 text
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
 
   useEffect(() => {
@@ -95,11 +96,30 @@ export default function PaymentPage() {
     return categoryMap[category] || category;
   };
 
+  //Used to convert payment slip images to base64
+  const encodeToBase64 = (file: File) => {
+    return new Promise((resolve, reject) => {
+      const fileReader = new FileReader();
+
+      fileReader.readAsDataURL(file);
+
+      fileReader.onload = () => {
+        resolve(fileReader.result);
+      };
+
+      fileReader.onerror = (error) => {
+        reject(error);
+      };
+
+    });
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
       if (file.type === "image/png" || file.type === "image/jpeg") {
+        const base64Res = encodeToBase64(file).then( b64 => {setSelectedFileAsBase64(b64 as string)}); //Store the payment slip as base64 text.
         setSelectedFile(file);
         toast.success("File Selected Successfully", {
           description: `${file.name} has been selected and is ready for upload.`,
@@ -175,6 +195,15 @@ export default function PaymentPage() {
     }
 
     startTransition(async () => {
+      //Send customer data to backend
+      var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants'));//cart used as payment summary
+      customerSummary.push({slipBlobBase64: `${selectedFileAsBase64}`});//Stores the payment slip image as bas64 text in the JSON request data
+      const response = await fetch("/api/paymentslip",{
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customerSummary),
+      }
+      )
       // Simulate file upload and processing
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
