@@ -5,6 +5,7 @@ import RegisterForm from "@/components/register-form";
 import Footer from "@/components/footer";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { setOrderState } from "@/components/backplug";//contains code to communicate with api endpoints
 
 function RegistrationPageContent() {
   const { 
@@ -86,6 +87,7 @@ function RegistrationPageContent() {
     
     // Store cart items in localStorage for payments page
     localStorage.setItem('checkoutParticipants', JSON.stringify(cartItems));
+    setOrderState(JSON.stringify(cartItems))//Send cart data to server
     window.location.href = '/payments';
   };
 

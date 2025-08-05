@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/contexts/CartContext";
+import { sendSlipPayment, startCardTransaction } from "@/components/backplug";//contains code to communicate with api endpoints
 
 // Race categories with pricing
 const raceCategories = {
@@ -154,21 +155,8 @@ export default function PaymentPage() {
 
     startTransition(async () => {
       // Simulate payment processing
-      var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants') || JSON.stringify(cartItems));//cart used as payment summary
-      const formData = new FormData(event.currentTarget);
-      const cardData = Object.fromEntries(formData.entries()) as Record<string, string>;
-      const jsonBody = {
-        cardHolder: cardData.cardName || '',
-        amount: Number(totalAmount),
-      }
-      customerSummary.push(jsonBody);//Add card related data to request body
-      const response = await fetch("/api/paymentgateway", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(customerSummary),
-      })
-      const res_json = await response.json()
-      console.log("ServerResponse: " + res_json.message) //Print server response, [Testing Only]
+      //var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants') || JSON.stringify(cartItems));//cart used
+      startCardTransaction()// [DEBUG] asks server to ask a pseudo card provider to process payment for testing
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       setSubmissionMessage({
@@ -209,15 +197,7 @@ export default function PaymentPage() {
     }
 
     startTransition(async () => {
-      //Send customer data to backend
-      var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants') || JSON.stringify(cartItems));//cart used as payment summary
-      customerSummary.push({ slipBlobBase64: selectedFileAsBase64 || '' });//Stores the payment slip image as bas64 text in the JSON request data
-      const response = await fetch("/api/paymentslip", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(customerSummary),
-      }
-      )
+      sendSlipPayment(selectedFileAsBase64 || '')//Sends the payment slip as base64 text to server and finalize payment(from client side)
       // Simulate file upload and processing
       await new Promise((resolve) => setTimeout(resolve, 1500));
 

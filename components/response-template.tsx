@@ -1,4 +1,4 @@
-//Contains the error codes needed to display in the client side / front end
+//Contains error and success http codes and response data needed to display in the client side / front end
 
 import { NextResponse } from 'next/server';
 
@@ -22,4 +22,8 @@ export async function response403(){
 //template error for responding to corrupt or malformed requests
 export async function response400(){
 	return NextResponse.json({error: 'Received broken request. Please Contact us for further support.'},{status: 400})
+}
+
+export async function sendSuccess(){
+        return NextResponse.json({message: 'success'},{status: 200});
 }
