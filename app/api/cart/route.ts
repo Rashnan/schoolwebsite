@@ -43,7 +43,7 @@ export async function POST(reqN: Request){
             if ((typeof request.totalPrice)!='number'){return response400();}//reject if data type is not a number
 
             //Verify data cart
-            if (!request.cart){return response400;}//Checks if cart is present
+            if (!request.cart){return response400();}//Checks if cart is present
             if ((typeof request.cart)!='object'){return response400();}//reject if data type is not an object list
 
         }
