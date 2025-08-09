@@ -13,6 +13,7 @@ import {
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "../ui/button";
 
 export function SigninForm() {
   return (
@@ -46,7 +47,8 @@ export function SigninForm() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col">
-            <button className="w-full">Sign In</button>
+            {/* <button className="w-full">Sign In</button> */}
+            <Button className="w-full">Sign In</Button>
           </CardFooter>
         </Card>
         <div className="mt-4 text-center text-sm">

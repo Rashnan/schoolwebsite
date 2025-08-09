@@ -2,6 +2,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Requirements:
+- docker
+- node@22 and npm@11
+
 First, clone the repo:
 ```bash
 git clone https://github.com/Jaid199/schoolwebsite
@@ -13,6 +17,16 @@ Then, go into the folder and install all dependencies
 ```bash
 cd schoolwebsite
 npm install
+```
+
+Start the mysql database
+```bash
+docker compose up -d
+```
+
+If this is the first time starting the database: push all migrations to the db. This will create all tables.
+```bash
+npx drizzle-kit migrate
 ```
 
 Finally, start the development server
