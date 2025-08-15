@@ -442,8 +442,9 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                 Your Details
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="grid gap-3 sm:gap-4 md:grid-cols-2 px-4 sm:px-6">
-                            <div className="space-y-2">
+                        <CardContent className="px-4 sm:px-6">
+                            <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
                                 <Label htmlFor="fullName" className="text-sm sm:text-base">Full Name</Label>
                                 <Input
                                     id="fullName"
@@ -520,36 +521,37 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                     )}
                                 </div>
                             )}
-                            
-                            {/* T-shirt Size Chart Button */}
-                            {includeTshirt && (
-                                <div className="flex justify-end mt-4">
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" type="button" className="text-xs sm:text-sm">
-                                                View T-shirt Size Chart
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[600px]">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-lg sm:text-xl">T-shirt Size Chart</DialogTitle>
-                                                <DialogDescription className="text-xs sm:text-sm">
-                                                    Refer to this chart to find your perfect T-shirt size.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <div className="py-4">
-                                                <Image
-                                                    src="/placeholder.svg?height=400&width=600&text=T-shirt+Size+Chart"
-                                                    alt="T-shirt Size Chart"
-                                                    width={600}
-                                                    height={400}
-                                                    className="w-full h-auto object-contain"
-                                                />
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                            )}
+                            </div>
+                        
+                        {/* T-shirt Size Chart Button */}
+                        {includeTshirt && (
+                            <div className="flex justify-end mt-4 pb-2">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" type="button" className="text-xs sm:text-sm">
+                                            View T-shirt Size Chart
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[600px]">
+                                        <DialogHeader>
+                                            <DialogTitle className="text-lg sm:text-xl">T-shirt Size Chart</DialogTitle>
+                                            <DialogDescription className="text-xs sm:text-sm">
+                                                Refer to this chart to find your perfect T-shirt size.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="py-4">
+                                            <Image
+                                                src="/placeholder.svg?height=400&width=600&text=T-shirt+Size+Chart"
+                                                alt="T-shirt Size Chart"
+                                                width={600}
+                                                height={400}
+                                                className="w-full h-auto object-contain"
+                                            />
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        )}
                         </CardContent>
                     </Card>
 
