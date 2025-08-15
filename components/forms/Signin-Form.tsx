@@ -17,16 +17,16 @@ import { Button } from "../ui/button";
 
 export function SigninForm() {
   return (
-    <div className="w-full max-w-md">
-      <form>
+    <div className="w-full max-w-sm sm:max-w-md px-4 sm:px-0">
+      <form method="post">
         <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-3xl font-bold">Sign In</CardTitle>
-            <CardDescription>
+          <CardHeader className="space-y-1 px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-3xl font-bold">Sign In</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Enter your details to sign in to your account
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -46,12 +46,11 @@ export function SigninForm() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col">
-            {/* <button className="w-full">Sign In</button> */}
+          <CardFooter className="flex flex-col px-4 sm:px-6">
             <Button className="w-full">Sign In</Button>
           </CardFooter>
         </Card>
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-xs sm:text-sm px-4 sm:px-0">
           Don't have an account?
           <Link className="underline ml-2" href="signup">
             Sign Up

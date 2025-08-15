@@ -24,6 +24,14 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import Image from "next/image";
 import { toast } from "sonner";
 import { User } from "lucide-react";
@@ -267,24 +275,24 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle className="text-3xl font-bold text-center">
+            <CardHeader >
+                <CardTitle className="text-xl sm:text-3xl font-bold text-center">
                     {initialData ? "Edit Registration" : "Participant Registration"}
                 </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
                 <form
                     id="registration-form"
                     onSubmit={handleSubmit}
-                    className="space-y-6"
+                    className="space-y-4 sm:space-y-6"
                 >
                     {/* Category Selection */}
-                    <Card className="mb-6">
-                        <CardHeader>
-                            <CardTitle>Race Category</CardTitle>
+                    <Card className="mb-4 sm:mb-6">
+                        <CardHeader >
+                            <CardTitle className="text-lg sm:text-xl">Race Category</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2">
-                            <Label htmlFor="category">Select Race Category</Label>
+                        <CardContent className="space-y-2 px-4 sm:px-6">
+                            <Label htmlFor="category" className="text-sm sm:text-base">Select Race Category</Label>
                             <Select
                                 name="category"
                                 required
@@ -294,29 +302,25 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                 }
                             >
                                 <SelectTrigger id="category">
-                                    <SelectValue placeholder="Choose your race category" />
+                                    <SelectValue placeholder="Choose category" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="5k-race">
-                                        5K Race - Entry Fee: MVR 300 (Prize: MVR 3,000 for top
-                                        3)
+                                        5K Race - MVR 300
                                     </SelectItem>
                                     <SelectItem value="10k-race">
-                                        10K Race - Entry Fee: MVR 350 (Prize: MVR 5,000 for top
-                                        3)
+                                        10K Race - MVR 350
                                     </SelectItem>
                                     <SelectItem value="half-marathon">
-                                        Half Marathon - Entry Fee: MVR 450 (Prize: MVR 7,500 for
-                                        top 3)
+                                        Half Marathon - MVR 450
                                     </SelectItem>
                                     <SelectItem value="full-marathon">
-                                        Full Marathon - Entry Fee: MVR 550 (Prize: MVR 10,000
-                                        for top 3)
+                                        Full Marathon - MVR 550
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                             {formErrors.category && (
-                                <p className="text-red-500 text-sm">
+                                <p className="text-red-500 text-xs sm:text-sm">
                                     {formErrors.category}
                                 </p>
                             )}
@@ -340,24 +344,108 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                         }
                                     }}
                                 />
-                                <Label htmlFor="includeTshirt">
+                                <Label htmlFor="includeTshirt" className="text-sm sm:text-base">
                                     Include T-shirt (+MVR 50)
                                 </Label>
+                            </div>
+                            
+                            {/* Race Category Details Button */}
+                            <div className="flex justify-end mt-4">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" type="button" className="text-xs sm:text-sm">
+                                            View Race Category Details
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-[95vw] sm:max-w-[700px] max-h-[90vh]" showCloseButton={true} style={{
+                                        padding: "0px",
+                                    }}>
+                                        <div className="max-h-[90vh] overflow-y-auto p-6">
+                                            <DialogHeader className="px-0 pb-4">
+                                                <DialogTitle className="text-lg sm:text-xl">Race Category Details</DialogTitle>
+                                                <DialogDescription className="text-xs sm:text-sm">
+                                                    Complete information about each race category including prizes and details.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="py-4 px-0">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="text-xs sm:text-sm font-semibold min-w-[80px]">Race</TableHead>
+                                                        <TableHead className="text-xs sm:text-sm font-semibold min-w-[60px]">Distance</TableHead>
+                                                        <TableHead className="text-xs sm:text-sm font-semibold min-w-[70px]">Entry Fee</TableHead>
+                                                        <TableHead className="text-xs sm:text-sm font-semibold min-w-[100px]">Prize Money</TableHead>
+                                                        <TableHead className="text-xs sm:text-sm font-semibold min-w-[70px]">Start Time</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    <TableRow>
+                                                        <TableCell className="text-xs sm:text-sm font-medium">5K Race</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">5 km</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">MVR 300</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">
+                                                            <span className="block sm:inline">MVR 3,000</span>
+                                                            <span className="block sm:inline text-[10px] sm:text-xs text-gray-600"> for top 3</span>
+                                                        </TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">09:00 AM</TableCell>
+                                                    </TableRow>
+                                                    <TableRow>
+                                                        <TableCell className="text-xs sm:text-sm font-medium">10K Race</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">10 km</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">MVR 350</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">
+                                                            <span className="block sm:inline">MVR 5,000</span>
+                                                            <span className="block sm:inline text-[10px] sm:text-xs text-gray-600"> for top 3</span>
+                                                        </TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">09:45 AM</TableCell>
+                                                    </TableRow>
+                                                    <TableRow>
+                                                        <TableCell className="text-xs sm:text-sm font-medium">Half Marathon</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">21.1 km</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">MVR 450</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">
+                                                            <span className="block sm:inline">MVR 7,500</span>
+                                                            <span className="block sm:inline text-[10px] sm:text-xs text-gray-600"> for top 3</span>
+                                                        </TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">10:30 AM</TableCell>
+                                                    </TableRow>
+                                                    <TableRow>
+                                                        <TableCell className="text-xs sm:text-sm font-medium">Full Marathon</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">42.2 km</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">MVR 550</TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">
+                                                            <span className="block sm:inline">MVR 10,000</span>
+                                                            <span className="block sm:inline text-[10px] sm:text-xs text-gray-600"> for top 3</span>
+                                                        </TableCell>
+                                                        <TableCell className="text-xs sm:text-sm">11:00 AM</TableCell>
+                                                    </TableRow>
+                                                </TableBody>
+                                            </Table>
+                                                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                                                    <p className="text-xs sm:text-sm text-blue-800">
+                                                        <strong>Note:</strong> All races include commemorative t-shirt for participants, finisher medals, water stations on course, and medical support available.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Participant Details */}
-                    <Card className="mb-6">
-                        <CardHeader>
-                            <CardTitle className="flex items-center">
+                    <Card className="mb-4 sm:mb-6">
+                        <CardHeader >
+                            <CardTitle className="text-lg sm:text-xl flex items-center">
                                 <User className="w-4 h-4 mr-2" />
                                 Your Details
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="fullName">Full Name</Label>
+                        <CardContent className="px-4 sm:px-6">
+                            <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                <Label htmlFor="fullName" className="text-sm sm:text-base">Full Name</Label>
                                 <Input
                                     id="fullName"
                                     name="fullName"
@@ -367,13 +455,13 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                     onChange={handleInputChange}
                                 />
                                 {formErrors.fullName && (
-                                    <p className="text-red-500 text-sm">
+                                    <p className="text-red-500 text-xs sm:text-sm">
                                         {formErrors.fullName}
                                     </p>
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
                                 <Input
                                     id="email"
                                     name="email"
@@ -384,11 +472,11 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                     onChange={handleInputChange}
                                 />
                                 {formErrors.email && (
-                                    <p className="text-red-500 text-sm">{formErrors.email}</p>
+                                    <p className="text-red-500 text-xs sm:text-sm">{formErrors.email}</p>
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="phoneNumber">Phone Number</Label>
+                                <Label htmlFor="phoneNumber" className="text-sm sm:text-base">Phone Number</Label>
                                 <Input
                                     id="phoneNumber"
                                     name="phoneNumber"
@@ -399,14 +487,14 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                     onChange={handleInputChange}
                                 />
                                 {formErrors.phoneNumber && (
-                                    <p className="text-red-500 text-sm">
+                                    <p className="text-red-500 text-xs sm:text-sm">
                                         {formErrors.phoneNumber}
                                     </p>
                                 )}
                             </div>
                             {includeTshirt && (
                                 <div className="space-y-2">
-                                    <Label htmlFor="tshirtSize">T-shirt Size</Label>
+                                    <Label htmlFor="tshirtSize" className="text-sm sm:text-base">T-shirt Size</Label>
                                     <Select
                                         name="tshirtSize"
                                         value={formState.participant.tshirtSize}
@@ -427,35 +515,66 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                                         </SelectContent>
                                     </Select>
                                     {formErrors.tshirtSize && (
-                                        <p className="text-red-500 text-sm">
+                                        <p className="text-red-500 text-xs sm:text-sm">
                                             {formErrors.tshirtSize}
                                         </p>
                                     )}
                                 </div>
                             )}
+                            </div>
+                        
+                        {/* T-shirt Size Chart Button */}
+                        {includeTshirt && (
+                            <div className="flex justify-end mt-4 pb-2">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" type="button" className="text-xs sm:text-sm">
+                                            View T-shirt Size Chart
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[600px]">
+                                        <DialogHeader>
+                                            <DialogTitle className="text-lg sm:text-xl">T-shirt Size Chart</DialogTitle>
+                                            <DialogDescription className="text-xs sm:text-sm">
+                                                Refer to this chart to find your perfect T-shirt size.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="py-4">
+                                            <Image
+                                                src="/placeholder.svg?height=400&width=600&text=T-shirt+Size+Chart"
+                                                alt="T-shirt Size Chart"
+                                                width={600}
+                                                height={400}
+                                                className="w-full h-auto object-contain"
+                                            />
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        )}
                         </CardContent>
                     </Card>
 
                     {/* Price Summary */}
                     {selectedCategory && (
-                        <Card className="mb-6 bg-blue-50 border-blue-200">
-                            <CardHeader>
-                                <CardTitle className="text-lg text-blue-800">Price Summary</CardTitle>
+                        <Card className="mb-4 sm:mb-6 bg-blue-50 border-blue-200">
+                            <CardHeader >
+                                <CardTitle className="text-base sm:text-lg text-blue-800">Price Summary</CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="px-4 sm:px-6">
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-700">Race Entry Fee:</span>
-                                        <span className="font-medium">MVR {racePrices[selectedCategory]}</span>
+                                        <span className="text-xs sm:text-sm text-gray-700">Race Entry Fee:</span>
+                                        <span className="text-xs sm:text-sm font-medium">MVR {racePrices[selectedCategory]}</span>
                                     </div>
                                     {includeTshirt && (
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-700">T-shirt:</span>
-                                            <span className="font-medium">MVR {tshirtPrice}</span>
+                                            <span className="text-xs sm:text-sm text-gray-700">T-shirt:</span>
+                                            <span className="text-xs sm:text-sm font-medium">MVR {tshirtPrice}</span>
                                         </div>
                                     )}
                                     <div className="border-t pt-2 mt-2">
-                                        <div className="flex justify-between items-center text-lg font-bold text-blue-800">
+                                        <div className="flex justify-between items-center text-base sm:text-lg font-bold text-blue-800">
                                             <span>Total:</span>
                                             <span>MVR {calculateTotalPrice()}</span>
                                         </div>
@@ -465,33 +584,7 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                         </Card>
                     )}
 
-                    {/* T-shirt Size Chart */}
-                    <div className="flex justify-end">
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" type="button">
-                                    View T-shirt Size Chart
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[600px]">
-                                <DialogHeader>
-                                    <DialogTitle>T-shirt Size Chart</DialogTitle>
-                                    <DialogDescription>
-                                        Refer to this chart to find your perfect T-shirt size.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="py-4">
-                                    <Image
-                                        src="/placeholder.svg?height=400&width=600&text=T-shirt+Size+Chart"
-                                        alt="T-shirt Size Chart"
-                                        width={600}
-                                        height={400}
-                                        className="w-full h-auto object-contain"
-                                    />
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
+
 
                     {/* Form Actions */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-end">
@@ -499,10 +592,11 @@ export default function RegistrationPageContent({ onSubmit, initialData }: Regis
                             type="button"
                             variant="outline"
                             onClick={handleClearForm}
+                            className="text-xs sm:text-sm"
                         >
                             Clear Form
                         </Button>
-                        <Button type="submit">
+                        <Button type="submit" className="text-xs sm:text-sm">
                             {initialData ? "Update Registration" : "Add to Cart"}
                         </Button>
                     </div>

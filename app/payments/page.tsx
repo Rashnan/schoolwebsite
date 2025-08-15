@@ -225,7 +225,7 @@ export default function PaymentPage() {
 
   if (participants.length === 0) {
     return (
-      <div className="container mx-auto py-12 px-4 max-w-6xl">
+      <div className="container mx-auto py-6 px-4 max-w-6xl">
         <div className="text-center">
           <p>Loading payment details...</p>
         </div>
@@ -234,7 +234,7 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 max-w-6xl">
+    <div className="container mx-auto py-6 px-4 max-w-6xl">
       {/* Header */}
       <div className="mb-8">
         <Button
@@ -363,7 +363,7 @@ export default function PaymentPage() {
           <CardContent>
             {/* Payment Method Selection */}
             <div className="mb-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button
                   variant={paymentMethod === "card" ? "default" : "outline"}
                   onClick={() => setPaymentMethod("card")}
@@ -428,7 +428,7 @@ export default function PaymentPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="flex flex-row gap-4">
                       <div>
                         <Label htmlFor="expiryMonth" className="mb-2">Month</Label>
                         <Select name="expiryMonth" required>
