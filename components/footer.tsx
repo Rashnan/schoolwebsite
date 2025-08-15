@@ -42,13 +42,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-xs sm:text-sm transition hover:underline">
+                <Link href="#" className="text-xs sm:text-sm transition hover:underline">
                   About
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/races/latest"
+                  href="#"
                   className="text-xs sm:text-sm transition hover:underline"
                 >
                   Latest Race

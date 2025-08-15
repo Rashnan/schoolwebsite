@@ -19,6 +19,11 @@ cd schoolwebsite
 npm install
 ```
 
+Update the .env files
+```bash
+cp .env.example .env
+```
+
 Start the mysql database
 ```bash
 docker compose up -d
