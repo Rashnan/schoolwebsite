@@ -38,7 +38,7 @@ async function calculateOrderTotal(cartItems: string){//cartItems must be in str
 
     var total:number = 0;
     const items = await JSON.parse(cartItems);
-    items.forEach((item) => {
+    items.forEach((item: any) => {
         total+=item.totalPrice;
     });
 
