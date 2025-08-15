@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { CircleUserRound } from "lucide-react";
+import { User } from "lucide-react";
 
 export default function SignInIcon() {
   return (
@@ -10,7 +10,7 @@ export default function SignInIcon() {
       href="/signin"
       className="relative inline-flex items-center justify-center p-2 text-gray-700 hover:text-blue-600 transition-colors"
     >
-      <CircleUserRound />
+      <User className="w-5 h-5 sm:w-6 sm:h-6" />
     </Link>
   );
 }
