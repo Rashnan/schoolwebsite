@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { response400, response403, sendSuccess } from '@/components/response-template'; //error codes
-import { bmlTransState } from '@/lib/bmlConnect'; //Transaction state used by BML webhook
+//import { bmlTransState } from '@/lib/bmlConnect'; //Transaction state used by BML webhook
 //Library for DB integration
 
 //BML uses POST for webhooks so we can safely add this function for now
