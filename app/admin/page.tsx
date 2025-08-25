@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import Footer from "@/components/footer";
 
 // Sample runner data
 const runners = [
@@ -342,6 +343,7 @@ export default function AdminRunnersPage() {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
