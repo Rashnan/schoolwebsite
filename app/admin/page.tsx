@@ -3,7 +3,8 @@
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { updatePageTitle } from "@/lib/metadata";
 import AdminNavbar from "@/components/admin-navbar";
 import DataTable, { Column } from "@/components/data-table";
 import Footer from "@/components/footer";
@@ -79,6 +80,10 @@ export default function AdminRunnersPage() {
     show: false,
     userIndex: null,
   });
+
+  useEffect(() => {
+    updatePageTitle("Admin Dashboard");
+  }, []);
 
   // Define columns for runners table
   const runnersColumns: Column[] = [

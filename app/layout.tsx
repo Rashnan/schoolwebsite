@@ -3,13 +3,26 @@ import "./globals.css";
 
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { CartProvider } from "@/contexts/CartContext";
+import { RegistrationProvider } from "@/contexts/RegistrationContext";
+import { ReceiptProvider } from "@/contexts/ReceiptContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Race Event Registration",
-  description: "Register for the upcoming race event",
+  title: {
+    template: '%s | MNU Marathon',
+    default: 'MNU Marathon - Race Event Registration'
+  },
+  description: "Register for the upcoming MNU Marathon race event. Join thousands of runners in our premier racing events.",
+  keywords: ['mnu-marathon', 'marathon', 'race', 'running', 'MNU', 'registration', 'event'],
+  authors: [{ name: 'MNU Marathon Devs' }],
+  creator: 'MNU Marathon Devs',
+  publisher: 'MNU Marathon Devs',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/marathon-banner.ico',
+  },
 };
 
 export default function RootLayout({
@@ -20,10 +33,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <CartProvider>
-          {children}
-          <Toaster />
-        </CartProvider>
+        <RegistrationProvider>
+          <ReceiptProvider>
+            {children}
+            <Toaster />
+          </ReceiptProvider>
+        </RegistrationProvider>
       </body>
     </html>
   );

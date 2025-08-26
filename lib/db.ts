@@ -1,4 +1,3 @@
-import { admins } from '@/db/schemas/users'
 import { drizzle } from 'drizzle-orm/mysql2'
 import { createPool } from 'mysql2/promise'
 
@@ -10,4 +9,6 @@ const poolConnection = createPool({
     password: process.env.MYSQL_PASSWORD!
 })
 
-export default drizzle({ client: poolConnection })
+const db = drizzle({ client: poolConnection });
+
+export { db };

@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useEffect, useState, useTransition } from "react";
+import { updatePageTitle } from "@/lib/metadata";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,20 +22,22 @@ import {
   Building2,
   Upload,
   FileImage,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useCart } from "@/contexts/CartContext";
+import { useRegistration } from "@/contexts/RegistrationContext";
+import { useReceipt } from "@/contexts/ReceiptContext";
 import { sendSlipPayment, startCardTransaction } from "@/components/backplug";//contains code to communicate with api endpoints
 
 // Race categories with pricing
 const raceCategories = {
-  "5k-race": { name: "5K Race", fee: 300, prize: "MVR 3,000" },
-  "10k-race": { name: "10K Race", fee: 350, prize: "MVR 5,000" },
-  "half-marathon": { name: "Half Marathon", fee: 450, prize: "MVR 7,500" },
-  "full-marathon": { name: "Full Marathon", fee: 550, prize: "MVR 10,000" },
+  "5k-race": { name: "5K Race", fee: 300 },
+  "10k-race": { name: "10K Race", fee: 350 },
+  "half-marathon": { name: "Half Marathon", fee: 450 },
+  "full-marathon": { name: "Full Marathon", fee: 550 },
 };
 
-interface Participant {
+interface Runner {
   fullName: string;
   email: string;
   phoneNumber: string;
@@ -44,17 +47,21 @@ interface Participant {
 interface RegistrationData {
   id: string;
   category: string;
-  participant: Participant;
-  includeTshirt: boolean;
+  runner: Runner;
   totalPrice: number;
 }
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { cartItems, clearCart } = useCart();
+  const { 
+    isLoading,
+    runners, 
+    registrationName, 
+    getTotalAmount, 
+    clearRunners: clearCart 
+  } = useRegistration();
+  const { setReceiptData } = useReceipt();
   const [isPending, startTransition] = useTransition();
-  const [participants, setParticipants] = useState<RegistrationData[]>([]);
-  const [totalAmount, setTotalAmount] = useState(0);
   const [submissionMessage, setSubmissionMessage] = useState<{
     success: boolean;
     message: string;
@@ -62,50 +69,166 @@ export default function PaymentPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileAsBase64, setSelectedFileAsBase64] = useState<string | null>(null); //for storing payment slip image as base64 text
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
+  const [discountCode, setDiscountCode] = useState<string>("");
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [discountLoading, setDiscountLoading] = useState<boolean>(false);
+  const [finalAmount, setFinalAmount] = useState<number>(0);
+  
+  // Calculate discount amount
+  const calculateDiscountAmount = () => {
+    if (!appliedDiscount) return 0;
+    
+    const baseTotal = getTotalAmount();
+    const discountValue = Number(appliedDiscount.value) || 0;
+    
+    let discountAmount = 0;
+    
+    if (appliedDiscount.type.toLowerCase() === 'percentage') {
+      discountAmount = (baseTotal * discountValue) / 100;
+    } else if (appliedDiscount.type.toLowerCase() === 'fixed') {
+      discountAmount = discountValue;
+    }
+    
+    return Math.min(discountAmount, baseTotal);
+  };
+
+  // Calculate final amount with discount
+  const calculateFinalAmount = () => {
+    const baseTotal = getTotalAmount();
+    const discountAmount = calculateDiscountAmount();
+    
+
+    
+    return baseTotal - discountAmount;
+  };
 
   useEffect(() => {
-    // Use cart items if available, otherwise fall back to localStorage
-    if (cartItems.length > 0) {
-      setParticipants(cartItems);
-      const total = cartItems.reduce((sum: number, participant: RegistrationData) => {
-        return sum + participant.totalPrice;
-      }, 0);
-      setTotalAmount(total);
-    } else {
-      // Get participants data from localStorage (fallback)
-      const storedParticipants = localStorage.getItem('checkoutParticipants');
-      if (storedParticipants) {
-        const parsedParticipants = JSON.parse(storedParticipants);
-        setParticipants(parsedParticipants);
+    updatePageTitle("Payment");
+  }, []);
 
-        // Calculate total amount
-        const total = parsedParticipants.reduce((sum: number, participant: RegistrationData) => {
-          return sum + participant.totalPrice;
-        }, 0);
-        setTotalAmount(total);
-      } else {
-        // No participants data, redirect back to register page
-        toast.error("No Registration Data Found", {
-          description: "Please complete your registration first before proceeding to payment.",
-          style: {
-            background: '#fef2f2',
-            color: '#991b1b',
-            border: '1px solid #fecaca',
-          },
-        });
-        router.push('/register');
-      }
+  useEffect(() => {
+    // Don't check for runners while still loading
+    if (isLoading) return;
+    
+    // Check if we have runners from context after loading is complete
+    if (runners.length === 0) {
+      toast.error("No Registration Data Found", {
+        description: "Please complete your registration first before proceeding to payment.",
+      });
+      router.push('/register');
+      return;
     }
-  }, [router, cartItems]);
+    
+    // No need to manage finalAmount state anymore - using calculateFinalAmount() function
+  }, [isLoading, runners, getTotalAmount, router]);
 
   const getCategoryDisplayName = (category: string) => {
     const categoryMap: Record<string, string> = {
+      "kids-dash": "Kids Dash",
       "5k-race": "5K Race",
       "10k-race": "10K Race",
       "half-marathon": "Half Marathon",
       "full-marathon": "Full Marathon"
     };
     return categoryMap[category] || category;
+  };
+
+  const validateDiscountCode = async () => {
+    if (!discountCode.trim()) {
+      toast.error("Please enter a discount code");
+      return;
+    }
+
+    setDiscountLoading(true);
+    try {
+      const response = await fetch('/api/discount', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: discountCode.trim(),
+          totalAmount: getTotalAmount(),
+          participantCount: runners.length
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setAppliedDiscount(data.discount);
+        
+        // Create description based on discount type
+        let discountDescription = `${data.discount.name} - MVR ${data.discount.discountAmount} off`;
+        if (data.discount.type === 'percentage') {
+          discountDescription = `${data.discount.name} - ${data.discount.value}% discount (MVR ${data.discount.discountAmount} off)`;
+        }
+        
+        toast.success("Discount Applied!", {
+          description: discountDescription,
+        });
+      } else {
+        toast.error("Invalid Discount Code", {
+          description: data.error || "Please check your discount code and try again.",
+        });
+      }
+    } catch (error) {
+      console.error('Error validating discount:', error);
+      toast.error("Error", {
+        description: "Failed to validate discount code. Please try again.",
+      });
+    } finally {
+      setDiscountLoading(false);
+    }
+  };
+
+  const removeDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCode("");
+    toast.success("Discount Removed", {
+      description: "Discount has been removed from your order.",
+    });
+  };
+
+  // Re-validate discount before payment
+  const revalidateDiscountBeforePayment = async () => {
+    if (!appliedDiscount) return true; // No discount to validate
+    
+    try {
+      const response = await fetch('/api/discount', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: appliedDiscount.code,
+          totalAmount: getTotalAmount(),
+          participantCount: runners.length
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update discount data in case values changed
+        setAppliedDiscount(data.discount);
+        return true;
+      } else {
+        // Discount is no longer valid
+        setAppliedDiscount(null);
+        setDiscountCode("");
+        toast.error("Discount No Longer Valid", {
+          description: data.error || "The discount has expired or is no longer available.",
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Error revalidating discount:', error);
+      toast.error("Discount Validation Error", {
+        description: "Could not validate discount. Please try again.",
+      });
+      return false;
+    }
   };
 
   //Used to convert payment slip images to base64
@@ -139,11 +262,6 @@ export default function PaymentPage() {
       } else {
         toast.error("Invalid File Type", {
           description: "Please select a PNG or JPEG image file only.",
-          style: {
-            background: '#fef2f2',
-            color: '#991b1b',
-            border: '1px solid #fecaca',
-          },
         });
         event.target.value = "";
       }
@@ -154,6 +272,12 @@ export default function PaymentPage() {
     event.preventDefault();
 
     startTransition(async () => {
+      // Re-validate discount before payment
+      const discountValid = await revalidateDiscountBeforePayment();
+      if (!discountValid) {
+        return; // Stop payment if discount is invalid
+      }
+
       // Simulate payment processing
       //var customerSummary = JSON.parse(localStorage.getItem('checkoutParticipants') || JSON.stringify(cartItems));//cart used
       startCardTransaction()// [DEBUG] asks server to ask a pseudo card provider to process payment for testing
@@ -165,17 +289,48 @@ export default function PaymentPage() {
       });
 
       toast.success("Payment Successful!", {
-        description: "Your registration has been confirmed. You will receive a confirmation email shortly.",
+        description: "Your registration has been confirmed. Redirecting to receipt...",
       });
 
-      // Clear cart and participants data
-      clearCart();
-      localStorage.removeItem("checkoutParticipants");
+      // Save receipt data to database
+      try {
+        const response = await fetch('/api/receipt', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            registrationName,
+            runners,
+            totalAmount: calculateFinalAmount(),
+            originalAmount: getTotalAmount(),
+            appliedDiscount: appliedDiscount,
+            paymentMethod: "Card Payment"
+          })
+        });
 
-      // Redirect to home page after successful payment
-      setTimeout(() => {
-        router.push('/');
-      }, 2000);
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Store receipt data in context
+          setReceiptData(result.receiptData);
+          
+          // Redirect to receipt page (no ID in URL) then clear cart
+          setTimeout(() => {
+            router.push('/receipt');
+            // Clear cart after navigation to prevent "no registration data" flash
+            setTimeout(() => {
+              clearCart();
+            }, 200);
+          }, 1500);
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to save registration');
+        }
+      } catch (error) {
+        console.error('Error saving registration:', error);
+        toast.error("Error saving registration. Please contact support.");
+      }
     });
   };
 
@@ -187,16 +342,17 @@ export default function PaymentPage() {
     if (!selectedFile) {
       toast.error("Payment Slip Required", {
         description: "Please upload your payment slip before submitting.",
-        style: {
-          background: '#fef2f2',
-          color: '#991b1b',
-          border: '1px solid #fecaca',
-        },
       });
       return;
     }
 
     startTransition(async () => {
+      // Re-validate discount before payment
+      const discountValid = await revalidateDiscountBeforePayment();
+      if (!discountValid) {
+        return; // Stop payment if discount is invalid
+      }
+
       sendSlipPayment(selectedFileAsBase64 || '')//Sends the payment slip as base64 text to server and finalize payment(from client side)
       // Simulate file upload and processing
       await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -209,21 +365,52 @@ export default function PaymentPage() {
 
       toast.success("Payment Slip Uploaded!", {
         description:
-          "We will verify your payment and confirm your registration within 24 hours.",
+          "We will verify your payment and confirm your registration within 24 hours. Redirecting to receipt...",
       });
 
-      // Clear cart and participants data
-      clearCart();
-      localStorage.removeItem("checkoutParticipants");
+      // Save receipt data to database
+      try {
+        const response = await fetch('/api/receipt', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            registrationName,
+            runners,
+            totalAmount: calculateFinalAmount(),
+            originalAmount: getTotalAmount(),
+            appliedDiscount: appliedDiscount,
+            paymentMethod: "Bank Transfer"
+          })
+        });
 
-      // Redirect to home page after successful payment
-      setTimeout(() => {
-        router.push('/');
-      }, 2000);
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Store receipt data in context
+          setReceiptData(result.receiptData);
+          
+          // Redirect to receipt page (no ID in URL) then clear cart
+          setTimeout(() => {
+            router.push('/receipt');
+            // Clear cart after navigation to prevent "no registration data" flash
+            setTimeout(() => {
+              clearCart();
+            }, 200);
+          }, 1500);
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || 'Failed to save registration');
+        }
+      } catch (error) {
+        console.error('Error saving registration:', error);
+        toast.error("Error saving registration. Please contact support.");
+      }
     });
   };
 
-  if (participants.length === 0) {
+  if (isLoading) {
     return (
       <div className="container mx-auto py-6 px-4 max-w-6xl">
         <div className="text-center">
@@ -234,9 +421,9 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-6xl">
+    <div className="container mx-auto pt-6 pb-4 md:pb-12 px-4 max-w-6xl">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-4 md:mb-8">
         <Button
           variant="ghost"
           onClick={() => router.push("/register")}
@@ -251,32 +438,40 @@ export default function PaymentPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
         {/* Left Side - Bill Details */}
         <Card>
           <CardHeader>
             <CardTitle>Registration Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Participant Details */}
+            {/* Registration Name */}
+            {registrationName && (
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900">Registration Name</h4>
+                <p className="text-blue-800 font-semibold">{registrationName}</p>
+              </div>
+            )}
+
+            {/* Runner Details */}
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">Participant Details</h4>
-              {participants.map((registration) => (
+              <h4 className="font-medium text-gray-900">Runner Details</h4>
+              {runners.map((registration) => (
                 <div key={registration.id} className="bg-gray-50 p-3 rounded-lg">
                   <p className="font-medium">
-                    {registration.participant.fullName}
+                    {registration.runner.fullName}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {registration.participant.email}
+                    {registration.runner.email}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {registration.participant.phoneNumber}
+                    {registration.runner.phoneNumber}
                   </p>
                   <p className="text-sm text-gray-600">
                     Category: {getCategoryDisplayName(registration.category)}
                   </p>
                   <p className="text-sm text-gray-600">
-                    T-shirt: {registration.includeTshirt ? `Yes (${registration.participant.tshirtSize})` : 'No'}
+                    T-shirt: Yes ({registration.runner.tshirtSize})
                   </p>
                 </div>
               ))}
@@ -285,73 +480,123 @@ export default function PaymentPage() {
             <Separator />
 
             {/* Cost Breakdown */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <h4 className="font-medium text-gray-900">Cost Breakdown</h4>
-              {participants.map((registration) => (
-                <div key={registration.id} className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>{registration.participant.fullName}:</span>
-                    <span className="font-medium">
-                      {getCategoryDisplayName(registration.category)}
-                    </span>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium text-gray-900 border-b border-gray-200">
+                        Participant
+                      </th>
+                      <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium text-gray-900 border-b border-gray-200">
+                        Category
+                      </th>
+                      <th className="px-2 md:px-4 py-2 md:py-3 text-right text-xs md:text-sm font-medium text-gray-900 border-b border-gray-200">
+                        Entry Fee
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {runners.map((registration, index) => (
+                      <tr key={registration.id} className="hover:bg-gray-50">
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-900">
+                          {registration.runner.fullName}
+                        </td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm text-gray-600">
+                          {getCategoryDisplayName(registration.category)}
+                        </td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-gray-900 text-right">
+                          MVR {registration.totalPrice}
+                        </td>
+                      </tr>
+                    ))}
+                    
+                    {appliedDiscount && (
+                      <tr className="bg-green-50">
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-green-800" colSpan={2}>
+                          Discount ({appliedDiscount.name})
+                        </td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm font-medium text-green-700 text-right">
+                          -MVR {calculateDiscountAmount().toFixed(0)}
+                        </td>
+                      </tr>
+                    )}
+                    
+                    <tr className="bg-gray-100 border-t-2 border-gray-300">
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-sm md:text-base font-bold text-gray-900" colSpan={2}>
+                        Total
+                      </td>
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-sm md:text-base font-bold text-gray-900 text-right">
+                        MVR {calculateFinalAmount()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Discount Code Section */}
+              <div className="mt-4 p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+                  <Tag className="w-4 h-4 mr-2 text-amber-500" />
+                  Discount Code
+                </h4>
+                {!appliedDiscount ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter discount code"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                      className="flex-1 bg-white border-blue-300 focus:border-blue-500 focus:ring-blue-500 placeholder:text-blue-400"
+                    />
+                    <Button
+                      onClick={validateDiscountCode}
+                      disabled={discountLoading || !discountCode.trim()}
+                      className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700"
+                    >
+                      {discountLoading ? "Validating..." : "Apply"}
+                    </Button>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Entry Fee:</span>
-                    <span>
-                      MVR {raceCategories[registration.category as keyof typeof raceCategories]?.fee}
-                    </span>
-                  </div>
-                  {registration.includeTshirt && (
-                    <div className="flex justify-between">
-                      <span>T-shirt:</span>
-                      <span>MVR 50</span>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div>
+                        <p className="font-medium text-green-800 flex items-center">
+                          <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                          {appliedDiscount.name}
+                        </p>
+                        <p className="text-sm text-green-700">
+                          Code: <span className="font-mono font-semibold">{appliedDiscount.code}</span>
+                          {appliedDiscount.type === 'percentage' && (
+                            <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                              {appliedDiscount.value}% OFF
+                            </span>
+                          )}
+                          {appliedDiscount.type === 'fixed' && (
+                            <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                              MVR {appliedDiscount.value} OFF
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={removeDiscount}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                      >
+                        Remove
+                      </Button>
                     </div>
-                  )}
-                  <div className="flex justify-between font-medium">
-                    <span>Subtotal:</span>
-                    <span>MVR {registration.totalPrice}</span>
                   </div>
-                  <Separator />
-                </div>
-              ))}
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total:</span>
-                <span>MVR {totalAmount}</span>
+                )}
               </div>
             </div>
 
-            {/* Banking Details for Internet Banking */}
-            <div className="mt-6 p-4 bg-green-50 rounded-lg">
-              <h4 className="font-medium text-green-900 mb-2">
-                Bank Transfer Details
-              </h4>
-              <div className="text-sm text-green-700 space-y-1">
-                <p>
-                  <strong>Bank:</strong> Maldivian Heritage Bank
-                </p>
-                <p>
-                  <strong>Account Name:</strong> Race Event Organization
-                </p>
-                <p>
-                  <strong>Account Number:</strong> 1234567890
-                </p>
-                <p>
-                  <strong>Reference:</strong> RACE-
-                  {participants[0]?.participant.fullName
-                    .replace(/\s+/g, "")
-                    .toUpperCase()}
-                </p>
-              </div>
-            </div>
 
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">
-                Prize Information
-              </h4>
-              <p className="text-sm text-blue-700">
-                Various prizes for top 3 male & female finishers in each category
-              </p>
-            </div>
+
+
           </CardContent>
         </Card>
 
@@ -484,7 +729,7 @@ export default function PaymentPage() {
                     size="lg"
                     disabled={isPending}
                   >
-                    {isPending ? "Processing Payment..." : `Pay Now - MVR ${totalAmount}`}
+                    {isPending ? "Processing Payment..." : `Pay Now - MVR ${calculateFinalAmount()}`}
                   </Button>
                 </form>
               </div>
@@ -493,15 +738,33 @@ export default function PaymentPage() {
             {/* Internet Banking Payment */}
             {paymentMethod === "banking" && (
               <div className="space-y-6">
-                <div className="text-center p-6 bg-gray-50 rounded-lg">
-                  <Building2 className="w-12 h-12 mx-auto text-blue-600 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    Internet Banking Payment
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Transfer the amount to our bank account and upload the
-                    payment slip below
-                  </p>
+                {/* Bank Transfer Details */}
+                <div className="p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-medium text-blue-900 mb-3 flex items-center">
+                    <Building2 className="w-4 h-4 mr-2 text-blue-600" />
+                    Bank Transfer Details
+                  </h4>
+                  <div className="text-sm text-blue-800 space-y-2">
+                    <p>
+                      <strong>Bank:</strong> Maldivian Heritage Bank
+                    </p>
+                    <p>
+                      <strong>Account Name:</strong> Race Event Organization
+                    </p>
+                    <p>
+                      <strong>Account Number:</strong> 1234567890
+                    </p>
+                    <p>
+                      <strong>Reference:</strong> <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded font-mono font-semibold">RACE-
+                      {registrationName ? registrationName.replace(/\s+/g, "").toUpperCase() : 
+                       runners[0]?.runner.fullName.replace(/\s+/g, "").toUpperCase()}</span>
+                    </p>
+                  </div>
+                  <div className="mt-3 p-3 bg-amber-50 rounded border border-amber-200">
+                    <p className="text-xs text-amber-800">
+                      <strong>Important:</strong> Please include the reference number in your transfer and upload the payment slip below.
+                    </p>
+                  </div>
                 </div>
 
                 <form onSubmit={handleBankingPayment} className="space-y-6">
@@ -553,11 +816,12 @@ export default function PaymentPage() {
                       </div>
                     </div>
 
-                    <div className="bg-yellow-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-yellow-800 mb-2">
+                    <div className="bg-blue-50 p-3 md:p-4 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                        <span className="w-2 h-2 bg-amber-400 rounded-full mr-2"></span>
                         Important Instructions:
                       </h4>
-                      <ul className="text-sm text-yellow-700 space-y-1">
+                      <ul className="text-sm text-blue-800 space-y-1">
                         <li>
                           • Make sure to include the reference number in your
                           transfer
@@ -574,13 +838,13 @@ export default function PaymentPage() {
 
                   <Button
                     type="submit"
-                    className="w-full"
+                    className="w-full bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-amber-50"
                     size="lg"
                     disabled={isPending}
                   >
                     {isPending
                       ? "Uploading Payment Slip..."
-                      : `Submit Payment Slip - MVR ${totalAmount}`}
+                      : `Submit Payment Slip - MVR ${calculateFinalAmount()}`}
                   </Button>
                 </form>
               </div>

@@ -13,14 +13,14 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center text-xs sm:text-xl font-bold text-blue-900"
+            className="flex items-center text-xs sm:text-xl font-bold !text-slate-800"
           >
             <Image
-              src="/images/mnu-logo-small.png"
-              alt="MNU Logo"
+              src="/images/marathon-logo.png"
+              alt="Marathon Logo"
               className="h-8 sm:h-12 w-auto mr-2 sm:mr-3"
-              width={48}
-              height={48}
+              width={100}
+              height={100}
             />
             MNU Marathon
           </Link>

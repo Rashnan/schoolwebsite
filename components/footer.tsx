@@ -10,22 +10,45 @@ export default function Footer() {
       <div className="w-full flex justify-center mb-4 md:mb-0">
         <Card className="w-fit text-center shadow-none border-none bg-transparent p-0">
           <CardContent className="flex flex-col items-center p-0">
-            <Link
-              href="https://mnu.edu.mv"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="MNU Home"
-            >
-              <img
-                src="/images/mnu-logo.png"
-                alt="Maldives National University Logo"
-                style={{ width: "150px", height: "auto" }}
-                className="sm:w-[200px] mx-auto mb-2"
-              />
-            </Link>
-            <p className="text-xs sm:text-sm text-gray-500">
-              Organized by Maldives National University
-            </p>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
+              {/* MNU Section */}
+              <div className="flex flex-col items-center">
+                <Link
+                  href="https://mnu.edu.mv"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="MNU Home"
+                >
+                  <Image
+                    src="/images/mnu-logo.png"
+                    alt="Maldives National University Logo"
+                    width={150}
+                    height={150}
+                    className="sm:w-[200px] mx-auto mb-2"
+                  />
+                </Link>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Hosted by The Maldives National University
+                </p>
+              </div>
+              
+              {/* Vertical divider for large screens */}
+              <div className="hidden md:block w-px h-24 bg-gray-300"></div>
+              
+              {/* MNUSU Section */}
+              <div className="flex flex-col items-center">
+                <Link href="https://mnusu.edu.mv" target="_blank" rel="noopener noreferrer" aria-label="MNU Home">
+                  <Image 
+                    src="/images/mnusu-logo-small.png"
+                    alt="Maldives National University Student Union Logo"
+                    width={40}
+                    height={150}
+                    className="h-[100px] mx-auto mb-2"
+                  />
+                </Link>
+                <p className="text-xs sm:text-sm text-gray-500">Organized by MNUSU</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

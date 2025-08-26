@@ -3,11 +3,11 @@
 import React from "react";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
-import { useCart } from "@/contexts/CartContext";
+import { useRegistration } from "@/contexts/RegistrationContext";
 
 export default function CartIndicator() {
-  const { getCartCount } = useCart();
-  const cartCount = getCartCount();
+  const { getRunnerCount } = useRegistration();
+  const cartCount = getRunnerCount();
 
   return (
     <Link 

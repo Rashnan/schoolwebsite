@@ -145,3 +145,84 @@ footer a[aria-label]:focus svg {
 button {
   cursor: pointer;
 }
+
+/* Toast Styles */
+.success-toast {
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.error-toast {
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fecaca !important;
+}
+
+.info-toast {
+  background: #ffffff !important;
+  color: #374151 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Print Styles for Receipt */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  .print\:bg-white {
+    background: white !important;
+  }
+  
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  
+  .print\:border-none {
+    border: none !important;
+  }
+  
+  /* Ensure table borders print */
+  table, th, td {
+    border: 1px solid #ddd !important;
+  }
+  
+  /* Page break controls */
+  .page-break-before {
+    page-break-before: always;
+  }
+  
+  .page-break-after {
+    page-break-after: always;
+  }
+  
+  .page-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+  
+  /* Print receipt specific styles */
+  @page {
+    margin: 0;
+    size: A4;
+  }
+  
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}

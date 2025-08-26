@@ -1,4 +1,4 @@
-import { admins } from "@/db/schemas/users";
+import { admins } from "@/db/schemas/admins";
 import db from "@/lib/db";
 import { NextRequest } from "next/server";
 

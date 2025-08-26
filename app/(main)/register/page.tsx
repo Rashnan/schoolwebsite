@@ -2,7 +2,8 @@
 
 import React from "react";
 import RegisterForm from "@/components/register-form";
-import { useCart } from "@/contexts/CartContext";
+import { updatePageTitle } from "@/lib/metadata";
+import { useRegistration } from "@/contexts/RegistrationContext";
 import { toast } from "sonner";
 import { setOrderState } from "@/components/backplug";//contains code to communicate with api endpoints
 import Link from "next/link";
@@ -21,35 +22,52 @@ import {
   Trash2, 
   ShoppingCart 
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function RegistrationPageContent() {
   const { 
-    cartItems, 
-    addToCart, 
-    removeFromCart, 
-    updateCartItem,
-    getCartTotal 
-  } = useCart();
+    runners, 
+    addRunner, 
+    removeRunner, 
+    updateRunner,
+    getTotalAmount,
+    registrationName,
+    setRegistrationName,
+    prepareCheckoutData
+  } = useRegistration();
   const [showForm, setShowForm] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<any>(null);
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
+  const [showRegistrationNameForm, setShowRegistrationNameForm] = React.useState(false);
+
+  // Set page title
+  React.useEffect(() => {
+    updatePageTitle("Race Registration");
+  }, []);
+
+  // Auto-populate registration name with first runner's name
+  React.useEffect(() => {
+    if (runners.length > 0 && !registrationName) {
+      setRegistrationName(runners[0].runner.fullName);
+    }
+  }, [runners, registrationName]);
 
   const handleFormSubmit = (data: any) => {
     if (editingItem) {
-      // Update existing cart item
-      updateCartItem(editingItem.id, data);
-      toast.success("Registration Updated", {
-        description: "Your registration has been updated successfully.",
+      // Update existing runner
+      updateRunner(editingItem.id, data);
+      toast.success("Runner Updated", {
+        description: "Your runner has been updated successfully.",
       });
     } else {
-      // Add new cart item
+      // Add new runner
       const newRegistration = {
         id: Date.now().toString(),
         ...data
       };
-      addToCart(newRegistration);
-      toast.success("Registration Added to Cart", {
-        description: "Your registration has been added to your cart.",
+      addRunner(newRegistration);
+      toast.success("Runner Added to Cart", {
+        description: "Your runner has been added to your cart.",
       });
     }
     
@@ -64,9 +82,9 @@ function RegistrationPageContent() {
   };
 
   const handleRemoveItem = (id: string) => {
-    removeFromCart(id);
-    toast.success("Registration Removed", {
-      description: "Registration has been removed from your cart.",
+    removeRunner(id);
+    toast.success("Runner Removed", {
+      description: "Runner has been removed from your cart.",
     });
   };
 
@@ -82,27 +100,28 @@ function RegistrationPageContent() {
     });
   };
 
-  const getCategoryDisplayName = (category: string) => {
-    const categoryMap: Record<string, string> = {
-      "5k-race": "5K Race",
-      "10k-race": "10K Race",
-      "half-marathon": "Half Marathon",
-      "full-marathon": "Full Marathon"
+      const getCategoryDisplayName = (category: string) => {
+        const categoryMap: Record<string, string> = {
+            "kids-dash": "Kids Dash",
+            "5k-race": "5K Race",
+            "10k-race": "10K Race",
+            "half-marathon": "Half Marathon",
+            "full-marathon": "Full Marathon"
+        };
+        return categoryMap[category] || category;
     };
-    return categoryMap[category] || category;
-  };
 
   const handleProceedToCheckout = () => {
-    if (cartItems.length === 0) {
+    if (runners.length === 0) {
       toast.error("Cart is Empty", {
-        description: "Please add at least one registration before proceeding to checkout.",
+        description: "Please add at least one runner before proceeding to checkout.",
       });
       return;
     }
     
-    // Store cart items in localStorage for payments page
-    localStorage.setItem('checkoutParticipants', JSON.stringify(cartItems));
-    setOrderState(JSON.stringify(cartItems))//Send cart data to server
+    // Prepare checkout data using context method
+    const checkoutData = prepareCheckoutData();
+    setOrderState(JSON.stringify(checkoutData))//Send cart data to server
     window.location.href = '/payments';
   };
 
@@ -112,7 +131,7 @@ function RegistrationPageContent() {
         <div className="text-center mb-6 md:mb-12">
           <h1 className="text-2xl sm:text-5xl font-bold text-gray-900 mb-4">Race Registration</h1>
           <p className="text-sm sm:text-xl text-gray-600 max-w-2xl mx-auto">
-            Join thousands of runners in our premier racing events. Add registrations to your cart and proceed to checkout!
+            Join thousands of runners in our premier racing events. Add runners to your cart and proceed to checkout!
           </p>
         </div>
         
@@ -132,9 +151,9 @@ function RegistrationPageContent() {
                     <span className="group-hover:scale-110 transition-transform duration-200">+</span>
                   </button>
                 </div>
-                <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-4">Add New Registration</h2>
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-4">Add New Runner</h2>
                 <p className="text-sm sm:text-lg text-gray-600 mb-8 max-w-sm mx-auto">
-                  Click the button above to add a new participant registration to your cart
+                  Click the button above to add a new runner to your cart
                 </p>
                 <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
                   <div className="flex items-center space-x-2">
@@ -152,7 +171,7 @@ function RegistrationPageContent() {
                 <div className="bg-[#1e3a8a] px-8 py-6">
                   <div className="flex justify-between items-center">
                     <h2 className="text-lg sm:text-2xl font-bold text-white">
-                      {editingItem ? "Edit Registration" : "New Registration"}
+                      {editingItem ? "Edit Runner" : "New Runner"}
                     </h2>
                     <button
                       onClick={() => {
@@ -175,17 +194,69 @@ function RegistrationPageContent() {
 
           {/* Right Side - Cart Summary */}
           <div className="space-y-6" id="cart-summary">
-            {cartItems.length > 0 ? (
+            {runners.length > 0 ? (
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl sm:text-3xl font-bold text-gray-900">Your Cart</h2>
                   <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full font-semibold">
-                    {cartItems.length} {cartItems.length === 1 ? 'Registration' : 'Registrations'}
+                    {runners.length} {runners.length === 1 ? 'Runner' : 'Runners'}
                   </div>
+                </div>
+
+                {/* Registration Name Section */}
+                <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-slate-900">Registration Name</h3>
+                    <Button
+                      onClick={() => setShowRegistrationNameForm(!showRegistrationNameForm)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-full"
+                    >
+                      {showRegistrationNameForm ? <X className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  
+                  {showRegistrationNameForm ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={registrationName}
+                        onChange={(e) => setRegistrationName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter registration name"
+                      />
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => setShowRegistrationNameForm(false)}
+                          size="sm"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setRegistrationName(runners[0]?.runner.fullName || "");
+                            setShowRegistrationNameForm(false);
+                          }}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Reset to First Runner
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-slate-800 font-medium">
+                      {registrationName || "No registration name set"}
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-600 mt-2">
+                    This name will be used for your entire registration group
+                  </p>
                 </div>
                 
                 <div className="space-y-4">
-                  {cartItems.map((item) => (
+                  {runners.map((item) => (
                     <div key={item.id} className="border border-gray-200 rounded-xl p-6 bg-gray-50 hover:bg-white hover:shadow-md transition-all duration-200">
                       <div 
                         className="flex justify-between items-center cursor-pointer"
@@ -194,10 +265,12 @@ function RegistrationPageContent() {
                         {/* meta */}
                         <div className="flex items-center md:space-x-6 space-x-2">
                           <div className="hidden md:flex w-12 h-12 bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] rounded-full items-center justify-center text-white font-bold text-lg">
-                            {item.participant.fullName.charAt(0).toUpperCase()}
+                            {item.runner.fullName.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-semibold text-md sm:text-lg text-gray-900">{item.participant.fullName}</span>
+                            <span className="font-semibold text-md sm:text-lg text-gray-900">
+                              {item.runner.fullName}
+                            </span>
                             <div className="text-xs sm:text-sm text-gray-600 mt-1 flex items-center space-x-3">
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 {getCategoryDisplayName(item.category)}
@@ -225,7 +298,7 @@ function RegistrationPageContent() {
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-gray-900">Email</p>
-                                <p className="text-sm text-gray-600">{item.participant.email}</p>
+                                <p className="text-sm text-gray-600">{item.runner.email}</p>
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
@@ -234,7 +307,7 @@ function RegistrationPageContent() {
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-gray-900">Phone</p>
-                                <p className="text-sm text-gray-600">{item.participant.phoneNumber}</p>
+                                <p className="text-sm text-gray-600">{item.runner.phoneNumber}</p>
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
@@ -253,7 +326,7 @@ function RegistrationPageContent() {
                               <div>
                                 <p className="text-sm font-medium text-gray-900">T-shirt</p>
                                 <p className="text-sm text-gray-600">
-                                  {item.includeTshirt ? `Yes (${item.participant.tshirtSize})` : 'No'}
+                                  Yes ({item.runner.tshirtSize})
                                 </p>
                               </div>
                             </div>
@@ -302,7 +375,7 @@ function RegistrationPageContent() {
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
                   >
                     <ShoppingCart className="w-5 h-5" />
-                    <span>Proceed to Checkout - MVR {getCartTotal()}</span>
+                    <span>Proceed to Checkout - MVR {getTotalAmount()}</span>
                   </button>
                 </div>
               </div>
@@ -315,24 +388,24 @@ function RegistrationPageContent() {
                 <p className="text-sm sm:text-lg text-gray-600 mb-8 max-w-md mx-auto">
                   <span className="block md:hidden">
                     {/* mobile view */}
-                    Start building your race registration by adding participants using the form above.
+                    Start building your race registration by adding runners using the form above.
                   </span>
                   <span className="hidden md:block">
                     {/* desktop view */}
-                    Start building your race registration by adding participants using the form on the left.
+                    Start building your race registration by adding runners using the form on the left.
                   </span>
                 </p>
                 <div className="inline-flex items-center text-blue-600 font-medium">
                   <Link href="#registration-form" className="flex items-center">
-                    {/* mobile view */}
-                    <ArrowUp className="w-4 h-4 mr-2 hidden md:block" />
+                    {/* desktop view */}
+                    <ArrowLeft className="w-4 h-4 mr-2 hidden md:block" />
                     
                     {/* desktop view */}
                     <span className="hidden md:block">Get started with the form on the left</span>
                     {/* mobile view */}
                     <span className="block md:hidden">Get started with the form above</span>
-
-                    {/* desktop view */}
+                    
+                    {/* mobile view */}
                     <ArrowUp className="w-4 h-4 ml-2 block md:hidden" />
                   </Link>
                 </div>
