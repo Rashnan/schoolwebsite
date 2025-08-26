@@ -1,5 +1,5 @@
 import { admins } from "@/db/schemas/admins";
-import db from "@/lib/db";
+import { db } from "@/lib/db";
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
