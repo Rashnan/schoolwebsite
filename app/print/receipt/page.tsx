@@ -6,9 +6,17 @@ import Image from "next/image";
 import { useReceipt } from "@/contexts/ReceiptContext";
 
 interface ReceiptData {
+  appliedDiscount?: {
+    id: number;
+    name: string;
+    code: string;
+    type: string;
+    value: number;
+  } | null;
   registrationName: string;
   runners: any[];
   totalAmount: number;
+  originalAmount?: number;
   paymentMethod: string;
   paymentDate: string;
   receiptId: string;

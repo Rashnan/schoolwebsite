@@ -58,15 +58,7 @@ export async function POST(request: Request) {
     let discountAmount = 0;
     
     // Handle decimal values from database more carefully
-    let discountValue = 0;
-    if (typeof discountData.value === 'string') {
-      discountValue = parseFloat(discountData.value);
-    } else if (typeof discountData.value === 'number') {
-      discountValue = discountData.value;
-    } else {
-      // Handle decimal object from database
-      discountValue = parseFloat(discountData.value.toString());
-    }
+    let discountValue = parseFloat(discountData.value.toString());
     
     if (discountData.type.toLowerCase() === 'percentage') {
       discountAmount = (totalAmount * discountValue) / 100;
